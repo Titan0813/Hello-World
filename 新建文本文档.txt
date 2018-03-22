@@ -1,0 +1,133 @@
+ public static void handzhu()
+        {
+            string sql = string.Format(@"SELECT * FROM `temp1815`.`tablezl` WHERE  N IS NULL  AND TYPE='2'");
+            System.Data.DataTable dt = DbHelperMySql.GetDataSet(sql, CommandType.Text, null).Tables[0];
+
+            var rscnt = "0";
+            var tablename = "";
+            var coloun = "";
+
+            var N = "";
+            var XH = "";
+            var XL = "";
+            var H = "";
+            var L = "";
+
+            System.Data.DataTable dtnew;
+            for (var i = 0; i < dt.Rows.Count; i++)
+            {
+                tablename = dt.Rows[i]["tablename"].ToString();
+                coloun = dt.Rows[i]["coloun"].ToString();
+                sql = string.Format(@"SELECT ROUND(COUNT(1)*0.27) FROM    `temp1815`.`{0}` where qk=0", tablename);
+                //27%
+                rscnt = DbHelperMySql.GetDataSet(sql, CommandType.Text, null).Tables[0].Rows[0][0].ToString();
+
+                //25%
+                //sql = string.Format(@"SELECT ROUND(COUNT(1)*0.25) FROM    `temp1815`.`{0}`  where qk=0", tablename);
+                //N = DbHelperMySql.GetDataSet(sql, CommandType.Text, null).Tables[0].Rows[0][0].ToString();
+
+                //XH
+                sql = string.Format(@"select sum(aa) from (SELECT  CONVERT(`{0}`,DECIMAL(10,2)) aa FROM  `temp1815`.`{2}` WHERE qk=0 ORDER BY totalzg DESC LIMIT {1} ) a",
+                coloun, rscnt, tablename);
+                XH = DbHelperMySql.GetDataSet(sql, CommandType.Text, null).Tables[0].Rows[0][0].ToString();
+
+                //XL
+                sql = string.Format(@"select sum(aa) from (SELECT  CONVERT(`{0}`,DECIMAL(10,2)) aa FROM  `temp1815`.`{2}` WHERE qk=0 ORDER BY totalzg LIMIT {1} ) a",
+                coloun, rscnt, tablename);
+                XL = DbHelperMySql.GetDataSet(sql, CommandType.Text, null).Tables[0].Rows[0][0].ToString();
+
+                //H
+                sql = string.Format(@"SELECT  CONVERT(`{0}`,DECIMAL(10,2)) FROM  `temp1815`.`{1}` WHERE qk=0 ORDER BY CONVERT(`{0}`,DECIMAL(10,2)) DESC LIMIT 1",
+                coloun, tablename);
+                H = DbHelperMySql.GetDataSet(sql, CommandType.Text, null).Tables[0].Rows[0][0].ToString();
+
+                //L
+                sql = string.Format(@"SELECT  CONVERT(`{0}`,DECIMAL(10,2)) FROM  `temp1815`.`{1}` WHERE qk=0 ORDER BY CONVERT(`{0}`,DECIMAL(10,2)) LIMIT 1",
+                coloun, tablename);
+                L = DbHelperMySql.GetDataSet(sql, CommandType.Text, null).Tables[0].Rows[0][0].ToString();
+
+
+
+                sql = string.Format(@"update `temp1815`.`tablezl` set  XH=ROUND('{2}',2),XL=ROUND('{3}',2),H=ROUND('{4}',2),L=ROUND('{5}',2),N=ROUND('{6}',2)   where tablename='{0}' and coloun='{1}'",
+                 tablename, coloun, XH, XL, H, L, rscnt);
+
+
+
+                LogHelper.wInfo(typeof(Program), sql);
+                DbHelperMySql.ExecuteNonQuery(sql);
+            }
+        }
+
+        public static void handke()
+        {
+            string sql = string.Format(@"SELECT * FROM `temp1815`.`tablezl` WHERE TYPE='客'");
+            System.Data.DataTable dt = DbHelperMySql.GetDataSet(sql, CommandType.Text, null).Tables[0];
+
+            var rscnt = "0";
+            var tablename = "";
+            var coloun = "";
+
+            System.Data.DataTable dtnew;
+
+            int oklv = 0;
+            var phh = "";
+            var pll = "";
+
+            for (var i = 0; i < dt.Rows.Count; i++)
+            {
+                tablename = dt.Rows[i]["tablename"].ToString();
+                coloun = dt.Rows[i]["coloun"].ToString();
+                sql = string.Format(@"SELECT ROUND(COUNT(1)*0.27) FROM    `temp1815`.`{0}`  where qk=0", tablename);
+
+                //27%
+                rscnt = DbHelperMySql.GetDataSet(sql, CommandType.Text, null).Tables[0].Rows[0][0].ToString();
+
+
+                //ph计算
+                sql = string.Format(@"SELECT  CONVERT(`{0}`,DECIMAL(10,2)) FROM  `temp1815`.`{2}` WHERE qk=0 ORDER BY total DESC LIMIT {1}",
+                   coloun, rscnt, tablename);
+
+                dtnew = DbHelperMySql.GetDataSet(sql, CommandType.Text, null).Tables[0];
+                oklv = 0;
+                for (var j = 0; j < dtnew.Rows.Count; j++)
+                {
+                    if (Convert.ToDouble(dtnew.Rows[j][0].ToString()) > 0)
+                    {
+                        oklv = oklv + 1;
+                    }
+                }
+
+                phh = Convert.ToString(oklv) + "/" + rscnt;
+
+                sql = string.Format(@"update `temp1815`.`tablezl` set phh='{0}',ph=ROUND({3}/{4},2)  where tablename='{1}' and coloun='{2}' ",
+                    phh, tablename, coloun, oklv, rscnt);
+
+                LogHelper.wInfo(typeof(Program), sql);
+                DbHelperMySql.ExecuteNonQuery(sql);
+
+                //pl计算
+                sql = string.Format(@"SELECT  CONVERT(`{0}`,DECIMAL(10,2)) FROM  `temp1815`.`{2}` WHERE qk=0 ORDER BY total LIMIT {1}",
+                   coloun, rscnt, tablename);
+
+                dtnew = DbHelperMySql.GetDataSet(sql, CommandType.Text, null).Tables[0];
+                oklv = 0;
+                for (var j = 0; j < dtnew.Rows.Count; j++)
+                {
+                    if (Convert.ToDouble(dtnew.Rows[j][0].ToString()) > 0)
+                    {
+                        oklv = oklv + 1;
+                    }
+                }
+
+                pll = Convert.ToString(oklv) + "/" + rscnt;
+
+                sql = string.Format(@"update `temp1815`.`tablezl` set pll='{0}',pl=ROUND({3}/{4},2)   where tablename='{1}' and coloun='{2}'",
+                    pll, tablename, coloun, oklv, rscnt);
+
+
+
+                LogHelper.wInfo(typeof(Program), sql);
+                DbHelperMySql.ExecuteNonQuery(sql);
+
+            }
+        }
